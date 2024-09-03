@@ -309,12 +309,9 @@ function prettyPrintOutput(out) {
   let hasError = false;
   for (let item of items) {
     if (item.type === 'hole') {
-      const fileContent = readFileContent(filePath);
       prettyOut += formatHoleInfo(item, fileContent);
     } else if (item.type === 'error') {
       hasError = true;
-      const errorFilePath = item.message.split(':')[0];
-      const fileContent = readFileContent(errorFilePath);
       prettyOut += formatErrorInfo(item, fileContent);
     }
     prettyOut += '\n';
