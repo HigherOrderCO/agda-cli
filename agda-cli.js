@@ -292,11 +292,16 @@ function prettyPrintOutput(out) {
     const errorInfo = extractErrorInfo(obj);
     if (holeInfo) {
       items.push(holeInfo);
-    } else if (errorInfo && !seenErrors.has(errorInfo.message)) {
-      items.push(errorInfo);
-      seenErrors.add(errorInfo.message);
+    } else if (errorInfo) {
+      errorInfo.forEach(error => {
+        if (!seenErrors.has(error.message)) {
+          items.push(error);
+          seenErrors.add(error.message);
+        }
+      });
     }
   }
+
 
   // Generate pretty-printed output
   const fileContent = readFileContent(filePath);
