@@ -120,12 +120,24 @@ function extractHoleInfo(obj) {
 
 // Extracts error information from a JSON object
 function extractErrorInfo(obj) {
-  if (obj.kind === 'DisplayInfo' && obj.info && obj.info.error) {
-    const errorInfo = obj.info.error;
-    return {
-      type   : 'error',
-      message: errorInfo.message
-    };
+  if (obj.kind === 'DisplayInfo' && obj.info && (obj.info.error || obj.info.errors)) {
+    let errors = [];
+    
+    if (obj.info.error) {
+      // Single error case
+      errors.push({
+        type: 'error',
+        message: obj.info.error.message
+      });
+    } else if (obj.info.errors) {
+      // Multiple errors case
+      errors = obj.info.errors.map(error => ({
+        type: 'error',
+        message: error.message
+      }));
+    }
+    
+    return errors;
   }
   return null;
 }
