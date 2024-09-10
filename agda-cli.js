@@ -10,7 +10,7 @@ const filePath = process.argv[3];
 
 function simplifyAgdaOutput(output) {
   // Regular expression to match module paths
-  const modulePathRegex = /([A-Za-z0-9]+\.)+([A-Za-z0-9]+)/g;
+  const modulePathRegex = /([A-Za-z0-9]+\.)+([A-Za-z0-9]+)(?=[\s\n])/g;
   
   // Replace full module paths with just the last part
   return output.replace(modulePathRegex, (match) => {
