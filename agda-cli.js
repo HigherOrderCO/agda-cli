@@ -22,7 +22,7 @@ function simplifyAgdaOutput(output) {
 // Execute an Agda command and return the output as a Promise
 function executeAgdaCommand(command) {
   return new Promise((resolve, reject) => {
-    const agda = spawn("agda", ["--interaction-json", "--no-termination-check", "--no-libraries", "--allow-unsolved-metas"]);
+    const agda = spawn("agda", ["--interaction-json",  "--no-allow-incomplete-matches", "--no-termination-check", "--no-libraries", "--allow-unsolved-metas"]);
     let output = "";
     agda.stdout.on("data", (data) => output += data.toString());
     agda.stderr.on("data", (data) => console.error(`Agda Error: ${data}`));
@@ -131,12 +131,24 @@ function extractHoleInfo(obj) {
 
 // Extracts error information from a JSON object
 function extractErrorInfo(obj) {
-  if (obj.kind === 'DisplayInfo' && obj.info && obj.info.error) {
-    const errorInfo = obj.info.error;
-    return {
-      type   : 'error',
-      message: errorInfo.message
-    };
+  if (obj.kind === 'DisplayInfo' && obj.info && (obj.info.error || obj.info.errors)) {
+    let errors = [];
+    
+    if (obj.info.error) {
+      // Single error case
+      errors.push({
+        type: 'error',
+        message: obj.info.error.message
+      });
+    } else if (obj.info.errors) {
+      // Multiple errors case
+      errors = obj.info.errors.map(error => ({
+        type: 'error',
+        message: error.message
+      }));
+    }
+    
+    return errors;
   }
   return null;
 }
@@ -222,25 +234,22 @@ function prettify_UnboundVariable(errorMessage) {
 // Extracts and highlights the affected code from the error message
 function extractCodeFromError(errorMessage, fileContent, color) {
   const lines = errorMessage.split('\n');
-  const fileInfo = lines[0].split(':');
-  const errorFilePath = fileInfo[0];
-  const match = fileInfo[1].match(/(\d+),(\d+)-(?:(\d+),)?(\d+)/);
+  const match = lines[0].match(/(\d+),(\d+)-(?:(\d+),)?(\d+)/);
   
   if (match) {
     const iniLine = parseInt(match[1]);
     const iniCol  = parseInt(match[2]);
     const endLine = match[3] ? parseInt(match[3]) : iniLine;
     const endCol  = parseInt(match[4]);
-    // Read the content of the file where the error occurred
-    const errorFileContent = readFileContent(errorFilePath);
-    return highlightCode(errorFileContent, iniLine, iniCol, endCol - 1, endLine, color, errorFilePath);
+    
+    return highlightCode(fileContent, iniLine, iniCol, endCol - 1, endLine, color);
   }
 
   return '';
 }
 
 // Highlights the specified code section
-function highlightCode(fileContent, startLine, startCol, endCol, endLine, color, filePath) {
+function highlightCode(fileContent, startLine, startCol, endCol, endLine, color) {
   try {
     const lines = fileContent.split('\n');
     const dim       = '\x1b[2m';
@@ -294,11 +303,16 @@ function prettyPrintOutput(out) {
     const errorInfo = extractErrorInfo(obj);
     if (holeInfo) {
       items.push(holeInfo);
-    } else if (errorInfo && !seenErrors.has(errorInfo.message)) {
-      items.push(errorInfo);
-      seenErrors.add(errorInfo.message);
+    } else if (errorInfo) {
+      errorInfo.forEach(error => {
+        if (!seenErrors.has(error.message)) {
+          items.push(error);
+          seenErrors.add(error.message);
+        }
+      });
     }
   }
+
 
   // Generate pretty-printed output
   const fileContent = readFileContent(filePath);
@@ -306,12 +320,9 @@ function prettyPrintOutput(out) {
   let hasError = false;
   for (let item of items) {
     if (item.type === 'hole') {
-      const fileContent = readFileContent(filePath);
       prettyOut += formatHoleInfo(item, fileContent);
     } else if (item.type === 'error') {
       hasError = true;
-      const errorFilePath = item.message.split(':')[0];
-      const fileContent = readFileContent(errorFilePath);
       prettyOut += formatErrorInfo(item, fileContent);
     }
     prettyOut += '\n';
