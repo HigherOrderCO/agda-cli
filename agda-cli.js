@@ -211,22 +211,25 @@ function prettify_UnboundVariable(errorMessage) {
 // Extracts and highlights the affected code from the error message
 function extractCodeFromError(errorMessage, fileContent, color) {
   const lines = errorMessage.split('\n');
-  const match = lines[0].match(/(\d+),(\d+)-(?:(\d+),)?(\d+)/);
+  const fileInfo = lines[0].split(':');
+  const errorFilePath = fileInfo[0];
+  const match = fileInfo[1].match(/(\d+),(\d+)-(?:(\d+),)?(\d+)/);
   
   if (match) {
     const iniLine = parseInt(match[1]);
     const iniCol  = parseInt(match[2]);
     const endLine = match[3] ? parseInt(match[3]) : iniLine;
     const endCol  = parseInt(match[4]);
-    
-    return highlightCode(fileContent, iniLine, iniCol, endCol - 1, endLine, color);
+    // Read the content of the file where the error occurred
+    const errorFileContent = readFileContent(errorFilePath);
+    return highlightCode(errorFileContent, iniLine, iniCol, endCol - 1, endLine, color, errorFilePath);
   }
 
   return '';
 }
 
 // Highlights the specified code section
-function highlightCode(fileContent, startLine, startCol, endCol, endLine, color) {
+function highlightCode(fileContent, startLine, startCol, endCol, endLine, color, filePath) {
   try {
     const lines = fileContent.split('\n');
     const dim       = '\x1b[2m';
@@ -292,9 +295,12 @@ function prettyPrintOutput(out) {
   let hasError = false;
   for (let item of items) {
     if (item.type === 'hole') {
+      const fileContent = readFileContent(filePath);
       prettyOut += formatHoleInfo(item, fileContent);
     } else if (item.type === 'error') {
       hasError = true;
+      const errorFilePath = item.message.split(':')[0];
+      const fileContent = readFileContent(errorFilePath);
       prettyOut += formatErrorInfo(item, fileContent);
     }
     prettyOut += '\n';
