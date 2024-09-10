@@ -8,6 +8,17 @@ const path = require("path");
 const command = process.argv[2];
 const filePath = process.argv[3];
 
+function simplifyAgdaOutput(output) {
+  // Regular expression to match module paths
+  const modulePathRegex = /([A-Za-z0-9]+\.)+([A-Za-z0-9]+)/g;
+  
+  // Replace full module paths with just the last part
+  return output.replace(modulePathRegex, (match) => {
+    const parts = match.split('.');
+    return parts[parts.length - 1];
+  });
+}
+
 // Execute an Agda command and return the output as a Promise
 function executeAgdaCommand(command) {
   return new Promise((resolve, reject) => {
@@ -143,7 +154,7 @@ function formatHoleInfo(hole, fileContent) {
   
   result += `${dim}${underline}${filePath}${reset}\n`;
   result += highlightCode(fileContent, hole.range.start.line, hole.range.start.col, hole.range.end.col - 1, hole.range.start.line, 'green');
-  return result;
+  return simplifyAgdaOutput(result);
 }
 
 // Formats error information for pretty printing
@@ -309,7 +320,7 @@ function prettyPrintOutput(out) {
   if (hasError) {
     console.error(prettyOut.trim());
   } else {
-    console.log(prettyOut.trim() || "Checked.");
+    console.log(simplifyAgdaOutput(prettyOut.trim()) || "Checked.");
   }
 }
 
@@ -318,7 +329,7 @@ function parseRunOutput(output) {
   const jsonObjects = parseJsonObjects(output);
   for (let obj of jsonObjects) {
     if (obj.kind === 'DisplayInfo' && obj.info && obj.info.kind === 'NormalForm') {
-      return obj.info.expr;
+      return simplifyAgdaOutput(obj.info.expr);
     }
   }
   return "No output";
