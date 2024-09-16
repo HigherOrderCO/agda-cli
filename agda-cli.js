@@ -337,10 +337,15 @@ function prettyPrintOutput(out) {
 
 // Parses the output of the run command
 function parseRunOutput(output) {
+  const fileContent = readFileContent(filePath);
+
   const jsonObjects = parseJsonObjects(output);
   for (let obj of jsonObjects) {
     if (obj.kind === 'DisplayInfo' && obj.info && obj.info.kind === 'NormalForm') {
       return simplifyAgdaOutput(obj.info.expr);
+    } else if (obj?.info?.kind === 'Error') {
+      let errorInfo = formatErrorInfo(obj.info.error, fileContent);
+      return errorInfo;
     }
   }
   return "No output";
@@ -355,9 +360,6 @@ async function main() {
   switch (command) {
     case "check": {
       prettyPrintOutput(await agdaCheck());
-      const output = await agdaRun();
-      const result = parseRunOutput(output);
-      console.log(result);
       break;
     }
     case "run": {
