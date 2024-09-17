@@ -12,6 +12,8 @@ if (!agdaFile || !agdaFile.endsWith('.agda')) {
 }
 
 const baseName = path.basename(agdaFile, '.agda');
+const dirName = path.dirname(agdaFile);
+const fullPath = path.join(dirName, baseName);
 
 try {
   // Compile Agda to executable
@@ -22,9 +24,15 @@ try {
   console.log('Removing MAlonzo directory...');
   fs.rmSync('MAlonzo', { recursive: true, force: true });
 
-  console.log(`Successfully compiled ${agdaFile} to ${baseName}`);
-  console.log(`You can now run the executable with: ./${baseName}`);
+  // Move the compiled executable to the correct location if it's not already there
+  if (dirName !== '.' && fs.existsSync(baseName)) {
+    fs.renameSync(baseName, fullPath);
+  }
+
+  console.log(`Successfully compiled ${agdaFile} to ${fullPath}`);
+  console.log(`You can now run the executable with: ${fullPath}`);
 } catch (error) {
   console.error('An error occurred during compilation:', error.message);
   process.exit(1);
 }
+
