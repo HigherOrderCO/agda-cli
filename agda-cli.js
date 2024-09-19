@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
-const { spawn } = require("child_process");
+const { spawn, execSync } = require("child_process");
 const readline = require("readline");
 const fs = require("fs");
 const path = require("path");
 
 const command = process.argv[2];
 const filePath = process.argv[3];
+let ioBackend = process.argv[4];
 
 function simplifyAgdaOutput(output) {
   // Regular expression to match module paths
@@ -337,27 +338,78 @@ function prettyPrintOutput(out) {
 
 // Parses the output of the run command
 function parseRunOutput(output) {
+  const fileContent = readFileContent(filePath);
+
   const jsonObjects = parseJsonObjects(output);
   for (let obj of jsonObjects) {
     if (obj.kind === 'DisplayInfo' && obj.info && obj.info.kind === 'NormalForm') {
       return simplifyAgdaOutput(obj.info.expr);
+    } else if (obj?.info?.kind === 'Error') {
+      let errorInfo = formatErrorInfo(obj.info.error, fileContent);
+      return errorInfo;
     }
   }
   return "No output";
 }
 
+function getBackendCommand(ioBackend) {
+  const backends = {
+    "js": "agda-js",
+    "hs": "agda-compile"
+  };
+
+  if (!ioBackend) {
+    console.log("Defaulting to Haskell backend.");
+    ioBackend = "hs";
+  }
+
+  if (!backends[ioBackend]) {
+    console.error(`Unsupported backend: ${ioBackend}. Use 'js' or 'hs'.`);
+    process.exit(1);
+  }
+
+  return backends[ioBackend];
+}
+
+function compileAgda(backendCommand, filePath) {
+  execSync(`${backendCommand} ${filePath}`, { stdio: 'inherit' });
+}
+
+function runCompiledJs(compiledFileName) {
+  execSync(`cd ${compiledFileName.toLowerCase()} && node main.js`, { stdio: 'inherit' });
+}
+
+function runCompiledHs(compiledFileName) {
+  execSync(`./${compiledFileName}`, { stdio: 'inherit' });
+}
+
+function runIO(ioBackend, filePath) {
+  const backendCommand = getBackendCommand(ioBackend);
+  const compiledFileName = path.basename(filePath, '.agda');
+
+  try {
+    compileAgda(backendCommand, filePath);
+    
+    if (ioBackend === 'js') {
+      runCompiledJs(compiledFileName);
+    } else {
+      runCompiledHs(compiledFileName);
+    }
+  } catch (error) {
+    console.error('Error during compilation or execution:', error.message);
+    process.exit(1);
+  }
+}
+
 async function main() {
   if (!filePath || !filePath.endsWith(".agda")) {
-    console.error("Usage: agda-cli [check|run] <file.agda>");
+    console.error("Usage: agda-cli [check|run|runIO] <file.agda>");
     process.exit(1);
   }
 
   switch (command) {
     case "check": {
       prettyPrintOutput(await agdaCheck());
-      const output = await agdaRun();
-      const result = parseRunOutput(output);
-      console.log(result);
       break;
     }
     case "run": {
@@ -366,8 +418,12 @@ async function main() {
       console.log(result);
       break;
     }
+    case "runIO": {
+      runIO(ioBackend, filePath);
+      break;
+    }
     default: {
-      console.error("Invalid command. Use 'check' or 'run'.");
+      console.error("Invalid command. Use 'check' or 'run' or 'runIO'.");
       process.exit(1);
     }
   }
