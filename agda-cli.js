@@ -343,7 +343,7 @@ function parseRunOutput(output) {
       return simplifyAgdaOutput(obj.info.expr);
     }
   }
-  return "No output";
+  return "No output.";
 }
 
 async function main() {
