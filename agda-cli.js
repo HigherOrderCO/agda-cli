@@ -314,7 +314,6 @@ function prettyPrintOutput(out) {
     }
   }
 
-
   // Generate pretty-printed output
   const fileContent = readFileContent(filePath);
   let prettyOut = '';
@@ -331,6 +330,7 @@ function prettyPrintOutput(out) {
 
   if (hasError) {
     console.error(prettyOut.trim());
+    process.exit(1);
   } else {
     console.log(simplifyAgdaOutput(prettyOut.trim()) || "Checked.");
   }
