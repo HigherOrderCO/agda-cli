@@ -18,21 +18,19 @@ const fullPath = path.join(dirName, baseName);
 try {
   // Compile Agda to executable
   console.log('Compiling Agda file...');
-  execSync(`agda --compile --no-libraries --no-termination-check ${agdaFile}`, { stdio: 'inherit' });
+  execSync(`agda --compile --compile-dir=.build --no-libraries --no-termination-check ${agdaFile}`, { stdio: 'inherit' });
 
-  // Remove MAlonzo directory
-  console.log('Removing MAlonzo directory...');
-  fs.rmSync('MAlonzo', { recursive: true, force: true });
-
-  // Move the compiled executable to the correct location if it's not already there
-  if (dirName !== '.' && fs.existsSync(baseName)) {
-    fs.renameSync(baseName, fullPath);
+  // Move the compiled executable from .build to the correct location
+  const buildPath = path.join('.build', baseName);
+  if (fs.existsSync(buildPath)) {
+    fs.renameSync(buildPath, fullPath);
+    console.log(`Successfully compiled ${agdaFile} to ${fullPath}`);
+    console.log(`You can now run the executable with: ${fullPath}`);
+  } else {
+    console.error(`Compiled executable not found at ${buildPath}`);
+    process.exit(1);
   }
-
-  console.log(`Successfully compiled ${agdaFile} to ${fullPath}`);
-  console.log(`You can now run the executable with: ${fullPath}`);
 } catch (error) {
   console.error('An error occurred during compilation:', error.message);
   process.exit(1);
 }
-
