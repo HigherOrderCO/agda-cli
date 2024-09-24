@@ -14,14 +14,15 @@ npm install -g agda-cli
 
 ### agda-cli
 
-The main command-line interface for checking and running Agda files.
+The main command-line interface for checking, running, and compiling Agda files.
 
 ```
-agda-cli [check|run] <file.agda>
+agda-cli [check|run|runIO] <file.agda> [backend]
 ```
 
-- `check`: Checks the Agda file and displays any errors or holes.
+- `check`: Checks the Agda file and displays any errors, holes, or warnings.
 - `run`: Runs the Agda program and displays the output.
+- `runIO`: Compiles and runs the Agda program with IO capabilities.
 
 ### agda-compile
 
@@ -41,9 +42,14 @@ agda-js <file.agda>
 
 ## Features
 
-- Pretty-printed output for errors and holes
+- Pretty-printed output for errors, holes, and warnings
 - Syntax highlighting in the console
 - Easy-to-use commands for common Agda operations
+- Support for compiling Agda to executables (Haskell backend)
+- Support for compiling Agda to JavaScript (JavaScript backend)
+- Interactive mode for checking and running Agda files
+- Ability to run Agda programs with IO capabilities
+- Simplified Agda output for better readability
 
 ## Requirements
 
