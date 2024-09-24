@@ -19,16 +19,40 @@ function parseJsonObjects(str) {
 }
 
 // Extracts hole information from a JSON object
-function extractHoleInfo(obj) {
+function extractHoleInfo(obj, filePath) {
   if (obj.kind === 'DisplayInfo' && obj.info && obj.info.kind === 'GoalSpecific') {
+
     const holeInfo = obj.info;
     return {
       type   : 'hole',
       id     : holeInfo.interactionPoint.id,
       range  : holeInfo.interactionPoint.range[0],
       goal   : holeInfo.goalInfo.type,
-      context: holeInfo.goalInfo.entries
+      context: holeInfo.goalInfo.entries,
+      filePath: filePath
     };
+  }
+  return null;
+}
+
+function extractGoalsWarnings(obj, filePath) {
+  if (obj.kind === 'DisplayInfo' && obj.info && obj.info.kind === 'AllGoalsWarnings') {
+    const visibleGoals = obj.info.visibleGoals.map(goal => ({
+      type: 'goal',
+      id: goal.constraintObj.id,
+      range: goal.constraintObj.range[0],
+      goalType: goal.kind,
+      expectedType: goal.type,
+      filePath: filePath
+    }));
+
+    const warnings = obj.info.warnings.map(warning => ({
+      type: 'warning',
+      message: warning.message,
+      range: warning.range[0]
+    }));
+
+    return [...visibleGoals, ...warnings];
   }
   return null;
 }
@@ -85,7 +109,7 @@ function parseRunOutput(output, filePath) {
     if (obj.kind === 'DisplayInfo' && obj.info && obj.info.kind === 'NormalForm') {
       return obj.info.expr;
     } else if (obj?.info?.kind === 'Error') {
-      return obj.info.error;
+      return obj.info.error.message;
     }
   }
   return "No output.";
@@ -95,6 +119,7 @@ module.exports = {
   parseJsonObjects,
   extractHoleInfo,
   extractErrorInfo,
+  extractGoalsWarnings,
   getFileHoles,
   parseRunOutput
 }

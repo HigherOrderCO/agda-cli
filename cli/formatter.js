@@ -40,6 +40,31 @@ function formatErrorInfo(error, fileContent) {
   }
 }
 
+function formatGoalsWarning(item, fileContent) {
+  const bold = '\x1b[1m';
+  const dim = '\x1b[2m';
+  const underline = '\x1b[4m';
+  const reset = '\x1b[0m';
+  const yellow = '\x1b[33m';
+
+  let result = '';
+
+  if (item.type === 'goal') {
+    let at = `${item.filePath} at ${item.range.start.line}:${item.range.start.col}`
+    result += `${bold}Unsolved meta:${reset} ${item.expectedType}\n`;
+    result += `${dim}${underline}${at}${reset}\n`;
+    result += highlightCode(fileContent, item.range.start.line, item.range.start.col, item.range.end.col - 1, item.range.end.line, 'red');
+  } else if (item.type === 'warning') {
+    result += `${yellow}${bold}Warning:${reset} ${item.message}\n`;
+    if (item.range) {
+      result += `${dim}${underline}${filePath} at ${item.range.start.line}:${item.range.start.col}${reset}\n`;
+      result += highlightCode(fileContent, item.range.start.line, item.range.start.col, item.range.end.col - 1, item.range.end.line, 'red');
+    }
+  }
+
+  return result;
+}
+
 function prettifyError(errorMessage) {
   return prettify_TypeMismatch(errorMessage) || prettify_UnboundVariable(errorMessage);
 }
@@ -150,5 +175,6 @@ module.exports = {
   prettifyError,
   extractCodeFromError,
   highlightCode,
-  readFileContent
+  readFileContent,
+  formatGoalsWarning
 };

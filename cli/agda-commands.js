@@ -2,9 +2,9 @@ const { spawn, execSync } = require("child_process");
 const path = require("path");
 
 const {
-  simplifyAgdaOutput,
   formatHoleInfo,
   formatErrorInfo,
+  formatGoalsWarning,
   readFileContent
 } = require("./formatter");
 
@@ -12,14 +12,14 @@ const {
   parseJsonObjects,
   extractHoleInfo,
   extractErrorInfo,
+  extractGoalsWarnings,
   getFileHoles,
-  parseRunOutput
 } = require("./parser");
 
 // Execute an Agda command and return the output as a Promise
 function executeAgdaCommand(command) {
   return new Promise((resolve, reject) => {
-    const agda = spawn("agda", ["--interaction-json",  "--no-allow-incomplete-matches", "--no-termination-check", "--no-libraries"]);
+    const agda = spawn("agda", ["--interaction-json",  "--no-allow-incomplete-matches", "--no-libraries", "--no-termination-check", "--caching"]);
     let output = "";
     agda.stdout.on("data", (data) => output += data.toString());
     agda.stderr.on("data", (data) => console.error(`Agda Error: ${data}`));
@@ -78,17 +78,20 @@ function prettyPrintOutput(out, filePath) {
   const items = [];
   const seenErrors = new Set();
   for (let obj of jsonObjects) {
-    const holeInfo = extractHoleInfo(obj);
+    const holeInfo = extractHoleInfo(obj, filePath);
     const errorInfo = extractErrorInfo(obj);
+    const goalsWarningInfo = extractGoalsWarnings(obj, filePath);
     if (holeInfo) {
       items.push(holeInfo);
-    } else if (errorInfo) {
+    } else if (errorInfo && errorInfo.length > 0)  {
       errorInfo.forEach(error => {
         if (!seenErrors.has(error.message)) {
           items.push(error);
           seenErrors.add(error.message);
         }
       });
+    } else if (goalsWarningInfo) {
+      items.push(...goalsWarningInfo);
     }
   }
 
@@ -102,6 +105,9 @@ function prettyPrintOutput(out, filePath) {
     } else if (item.type === 'error') {
       hasError = true;
       prettyOut += formatErrorInfo(item, fileContent);
+    } else if (item.type === 'goal' || item.type === 'warning') {
+      console.log("hereee");
+      prettyOut += formatGoalsWarning(item, fileContent);
     }
     prettyOut += '\n';
   }
@@ -110,7 +116,7 @@ function prettyPrintOutput(out, filePath) {
     console.error(prettyOut.trim());
     process.exit(1);
   } else {
-    console.log(simplifyAgdaOutput(prettyOut.trim()) || "Checked.");
+    console.log(prettyOut.trim() || "Checked.");
   }
 }
 
