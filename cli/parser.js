@@ -46,13 +46,22 @@ function extractGoalsWarnings(obj, filePath) {
       filePath: filePath
     }));
 
+    const invisibleGoals = obj.info.invisibleGoals.map(goal => ({
+      type: 'goal',
+      id: goal.constraintObj.name,
+      range: goal.constraintObj.range[0],
+      goalType: goal.kind,
+      expectedType: goal.type,
+      filePath: filePath
+    }));
+
     const warnings = obj.info.warnings.map(warning => ({
       type: 'warning',
       message: warning.message,
       range: warning.range[0]
     }));
 
-    return [...visibleGoals, ...warnings];
+    return [...visibleGoals, ...invisibleGoals, ...warnings];
   }
   return null;
 }
