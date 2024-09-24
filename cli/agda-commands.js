@@ -106,7 +106,6 @@ function prettyPrintOutput(out, filePath) {
       hasError = true;
       prettyOut += formatErrorInfo(item, fileContent);
     } else if (item.type === 'goal' || item.type === 'warning') {
-      console.log("hereee");
       prettyOut += formatGoalsWarning(item, fileContent);
     }
     prettyOut += '\n';
