@@ -6,8 +6,12 @@ const {
   agdaRun,
   prettyPrintOutput,
   runIO,
-  parseRunOutput
 } = require("./cli/agda-commands");
+
+const {
+  parseRunOutput
+} = require("./cli/parser");
+
 
 const command = process.argv[2];
 const filePath = process.argv[3];
