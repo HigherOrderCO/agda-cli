@@ -45,7 +45,7 @@ async function agdaCheck(filePath) {
   var output = "";
   // Sends the Load command
   output += await sendCommand(filePath, `Cmd_load "${filePath}" []`) + "\n";
-  console.log(output)
+
   // Iterate through holes and send Cmd_goal_type_context_infer command for each
   try {
     let holes = getFileHoles(filePath);
