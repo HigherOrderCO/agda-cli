@@ -4,11 +4,13 @@ Agda CLI is a command-line tool that provides a set of utilities for working wit
 
 ## Installation
 
-To install Agda CLI globally, run:
+To install the development version of Agda CLI globally, clone this repository, and run the following command in the cloned directory:
 
 ```
-npm install -g agda-cli
+npm install -g .
 ```
+
+Depending on your system configuration, you may need to run the command as `root`, or use `sudo`.
 
 ## Usage
 
@@ -66,8 +68,8 @@ Lorenzo Battistela
 
 ## Contributing
 
-Contributions, issues, and feature requests are welcome. Feel free to check the [issues page](https://github.com/Lorenzobattistela/agda-cli/issues) if you want to contribute.
+Contributions, issues, and feature requests are welcome. Feel free to check the [issues page](https://github.com/HigherOrderCO/agda-cli/issues) if you want to contribute.
 
 ## Support
 
-If you have any questions or need help, please open an issue in the [GitHub repository](https://github.com/Lorenzobattistela/agda-cli).
+If you have any questions or need help, please open an issue in the [GitHub repository](https://github.com/HigherOrderCO/agda-cli).
