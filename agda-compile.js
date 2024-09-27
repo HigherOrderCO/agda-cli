@@ -18,7 +18,7 @@ const fullPath = path.join(dirName, baseName);
 try {
   // Compile Agda to executable
   console.log('Compiling Agda file...');
-  execSync(`agda --compile --compile-dir=.build --no-libraries --no-termination-check ${agdaFile}`, { stdio: 'inherit' });
+  execSync(`agda --compile --compile-dir=.build --no-libraries ${agdaFile}`, { stdio: 'inherit' });
 
   // Move the compiled executable from .build to the correct location
   const buildPath = path.join('.build', baseName);
