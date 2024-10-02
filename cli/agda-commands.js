@@ -160,7 +160,7 @@ function runIO(ioBackend, filePath) {
     if (ioBackend === 'js') {
       runCompiledJs(compiledFileName);
     } else {
-      runCompiledHs(compiledFileName);
+      runCompiledHs(filePath.slice(0, -5));
     }
   } catch (error) {
     console.error('Error during compilation or execution:', error.message);

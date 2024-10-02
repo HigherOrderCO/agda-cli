@@ -58,7 +58,7 @@ function extractGoalsWarnings(obj, filePath) {
     const warnings = obj.info.warnings.map(warning => ({
       type: 'warning',
       message: warning.message,
-      range: warning.range[0]
+      range: warning?.range?.[0]
     }));
 
     return [...visibleGoals, ...invisibleGoals, ...warnings];
