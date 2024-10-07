@@ -3,6 +3,7 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { platform } = require('node:process');
 
 const agdaFile = process.argv[2];
 if (!agdaFile || !agdaFile.endsWith('.agda')) {
@@ -15,7 +16,10 @@ const baseName = path.basename(agdaFile, '.agda');
 const dirName = path.dirname(agdaFile);
 const fullPath = path.join(dirName, baseName);
 
-const fixF64command = `find .build/MAlonzo/Code/Base/F64 -name "*.hs" -exec sed -i '/^module/a import qualified MAlonzo.RTE.Float' {} +`
+const fixF64command = platform == 'darwin'
+  ? `find .build/MAlonzo/Code/Base/F64 -name "*.hs" -exec sed -i '' '/^module/a\\
+import qualified MAlonzo.RTE.Float' {} +`
+  : `find .build/MAlonzo/Code/Base/F64 -name "*.hs" -exec sed -i '/^module/a import qualified MAlonzo.RTE.Float' {} +`
 
 const executeCompiled = (base) => {
   const buildPath = path.join('.build', base);
